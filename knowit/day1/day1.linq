@@ -3,7 +3,7 @@
 open System.IO
 
 let testData = [|50; 52; 52; 49; 50; 47; 45; 43; 50; 56|]
-let source_path = @"C:\source\aoc2019\knowit\day1"
+let source_path = Path.GetDirectoryName (Util.CurrentQueryPath)
 let path = Path.Combine([|source_path; "sau.txt"|])
 let realData = File.ReadAllText(path).Split(',')
                 |> Array.map (fun (x:string) -> x.Trim())
@@ -45,16 +45,3 @@ let day =
 realData.Count().Dump("Total days")
     
 day.Dump("Last day alive")
-
-
-
-
-
-
-
-
-
-
-
-
-
