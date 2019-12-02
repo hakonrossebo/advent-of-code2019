@@ -1,7 +1,8 @@
 <Query Kind="FSharpProgram" />
 
 open System.IO
-let source_path = @"C:\source\aoc2019"
+let source_path = Path.GetDirectoryName (Util.CurrentQueryPath)
+//let source_path = @"C:\source\aoc2019"
 let path = Path.Combine([|source_path; "aoc_1_1.txt"|])
 let lines = File.ReadAllLines(path)
 
