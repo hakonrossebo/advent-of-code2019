@@ -1,15 +1,5 @@
 <Query Kind="FSharpProgram" />
 
-//let startY = 0
-//let d = 2
-//
-//let test = [|startY .. -1 .. startY-d|]
-
-//let start = -5
-
-//let endd = -9
-//let test = [|start .. -1 ..endd|]
-//test.Dump()
 open System.IO
 let source_path = Path.GetDirectoryName (Util.CurrentQueryPath)
 let path = Path.Combine([|source_path; "input"|])
@@ -17,6 +7,9 @@ let lines = File.ReadAllLines(path)
 //dump lines
 let dump x =
     x.Dump()
+    
+let dumpM (m: string) x =
+    x.Dump(m)
     
 type Direction =
         | Up of int
@@ -48,16 +41,6 @@ let createDirection (direction: string) =
                 | _ -> NoDirection
     dir 
     
-//createDirection "U44" |> dump
-
-//line1, to directions, perform walk, to sequence of x, y points
-//let walk =
-//    function
-//    | Up d -> [0..d] |> List.map (fun _ -> (0, 1))
-//    | Down d -> [0..d] |> List.map (fun _ -> (0, -1))
-//    | Right d -> [0..d] |> List.map (fun _ -> (1, 0))
-//    | Left d -> [0..d] |> List.map (fun _ -> (-1, 0))
-//    | NoDirection -> [(0,0)] 
 
 let walk (startX, startY) =
     function
@@ -97,21 +80,77 @@ let accDirections (accList:(int*int) array) direction =
 //                |> dump
 //
 //
-let realData1Set =
-    lines.[0].Split(",")
-        |> Array.map createDirection
-        |> Array.fold accDirections [|(0,0)|]
-        |> Set.ofArray
-let realData2Set =
-    lines.[1].Split(",")
-        |> Array.map createDirection
-        |> Array.fold accDirections [|(0,0)|]
-        |> Set.ofArray
 
-let setUnionReal = Set.intersect realData1Set realData2Set
-                    |> Seq.map (fun (x, y) -> (abs x) + (abs y))
-                    |> Seq.sort
-                    |> Seq.skip 1
-                    |> Seq.take 1
+
+let createPathFromDirections (directions:string) =
+        directions.Split(",")
+        |> Array.map createDirection
+        |> Array.fold accDirections [|(0,0)|]
+
+
+//let realData1Set =
+//    lines.[0]
+//        |> createPathFromDirections
+//        |> Set.ofArray
+//        
+//let realData2Set =
+//    lines.[1]
+//        |> createPathFromDirections
+//        |> Set.ofArray
+//
+//let setUnionReal = Set.intersect realData1Set realData2Set
+//                    |> Seq.map (fun (x, y) -> (abs x) + (abs y))
+//                    |> Seq.sort
+//                    |> Seq.skip 1
+//                    |> Seq.take 1
+//                    |> dump
+
+let allPaths =
+            lines
+            |> Seq.ofArray
+            |> Seq.map createPathFromDirections
+            
+let setIntersectionReal = 
+                        allPaths
+                        |> Seq.map Set.ofArray
+                        |> Set.intersectMany
+                        |> Seq.map (fun (x, y) -> (abs x) + (abs y))
+                        |> Seq.sort
+                        |> Seq.skip 1
+                        |> Seq.take 1
+                        |> dumpM "Task 1 result"
                     
-                    |> dump
+//let setIntersectionReal2 = lines
+//                        |> Seq.ofArray
+//                        |> Seq.map (createPathFromDirections >> Set.ofArray)
+//                        |> Set.intersectMany
+//                        |> Seq.map (fun (x, y) -> (abs x) + (abs y))
+//                        |> Seq.sort
+//                        |> Seq.skip 1
+//                        |> Seq.take 1
+//                        |> dump
+//                    
+//                    
+//                    
+let setIntersections = 
+                        allPaths
+                        |> Seq.map Set.ofArray
+                        |> Set.intersectMany
+                        //|> dump
+                    
+                    
+let sumOfPathStepsToIntersection intersection = 
+         allPaths
+         |> Seq.map (fun path -> Seq.findIndex (fun i -> i = intersection) path) 
+         |> Seq.sum
+         
+//let r = sumOfPathStepsToIntersection (-1320, 536) |> dump
+
+let intersectionsAndPathStepSums =
+    setIntersections
+    |> Seq.map sumOfPathStepsToIntersection 
+    |> Seq.sort
+    |> Seq.skip 1
+    |> Seq.take 1
+    |> dumpM "Task 2 result - Shortest combined path"
+    
