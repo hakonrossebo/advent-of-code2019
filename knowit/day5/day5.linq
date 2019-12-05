@@ -16,27 +16,24 @@ let inputData = "tMlsioaplnKlflgiruKanliaebeLlkslikkpnerikTasatamkDpsdakeraBeIda
 
 let byttTreBokstaver (input:string) : string =
     input
-    |> Seq.toArray
-    |> Array.chunkBySize 3
-    |> Array.rev
-    |> Array.concat
-    |> String
+    |> Seq.chunkBySize 3
+    |> Seq.rev
+    |> Seq.concat
+    |> String.Concat
 
 let byttAnnenhverBokstav (input:string) : string =
     input
-    |> Seq.toArray
-    |> Array.chunkBySize 2
-    |> Array.map Array.rev
-    |> Array.concat
-    |> String
+    |> Seq.chunkBySize 2
+    |> Seq.map Array.rev
+    |> Seq.concat
+    |> String.Concat
 
 let byttHalvdeler (input:string) : string =
     input
-    |> Seq.toArray
-    |> Array.chunkBySize (input.Length / 2)
-    |> Array.rev
-    |> Array.concat
-    |> String
+    |> Seq.chunkBySize (input.Length / 2)
+    |> Seq.rev
+    |> Seq.concat
+    |> String.Concat
 
 let reverserBlanding (input:string) : string =
     input
