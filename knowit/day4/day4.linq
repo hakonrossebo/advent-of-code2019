@@ -9,7 +9,6 @@ let lines = File.ReadAllLines(path)
             |> Array.skip 1
             |> Array.map (fun x -> x.Split(",")) 
             |> Array.map (fun (xy:string[]) -> (int xy.[0], int xy.[1]))
-            |> Array.toList
             
 //lines.Dump()
 let startPos = (0, 0)            
@@ -19,27 +18,28 @@ let testData = [(1, 3); (1, 0); (3, 2)]
 //let testData = [(1, 0); (1, -2); (-1, -2); (-3, -3);  (-1, -1)]
 //testData.Dump()
 
-let getPath (initX, initY) (endX, endY) : (int * int) list =
+let getPath (initX, initY) (endX, endY) : (int * int) array =
     let posNegX = if endX >= initX then 1 else -1
     let posNegY = if endY >= initY then 1 else -1
     let xMove = [initX + posNegX .. posNegX .. endX]
                  |> List.map (fun x -> (x, initY))
                  
+                 
     let yMove = [initY + posNegY .. posNegY .. endY]
                  |> List.map (fun y -> (endX, y))
-    let combined = List.append xMove yMove 
+    let combined = List.append xMove yMove |> List.toArray
     combined
     
     
-let accCoords (accList:(int * int) list) nextCoord =
-    let newCoords = getPath (List.last accList) nextCoord
-    let combined = List.append accList newCoords
+let accCoords (accList:(int * int) array) nextCoord =
+    let newCoords = getPath (Array.last accList) nextCoord
+    let combined = Array.append accList newCoords
     combined
     
 
 let allDataPaths data =
    data 
-    |> List.fold accCoords [startPos]
+    |> Array.fold accCoords [|startPos|]
     //|> List.skip 1
     
 //let allTestDataPaths = allDataPaths testData
@@ -57,10 +57,10 @@ let calculateExtra n =
 
 let allGroupedAndCounted lst =
     lst
-    |> List.countBy id
-    |> List.map (fun (_, c) -> c)
-    |> List.map calculateExtra
-    |> List.sum
+    |> Array.countBy id
+    |> Array.map (fun (_, c) -> c)
+    |> Array.map calculateExtra
+    |> Array.sum
     |> (fun x -> x - 1)
 
 //(allGroupedAndCounted allTestDataPaths).Dump()
