@@ -1,46 +1,20 @@
 open System.IO
 let filSti = Path.Combine([| __SOURCE_DIRECTORY__; "krampus.txt" |])
 
-let linjer() =
-    File.ReadAllLines(filSti)
-    |> Array.map int64
-    |> Array.sort
-    |> Array.map string
+let finnKrampusTall (liste: string seq) =
+    seq {
+        for input in liste do
+            let inputNummer = int64 input
+            let kvadratTall = string (inputNummer * inputNummer)
+            for i in 1..kvadratTall.Length-1 do
+                let part1 = int64 kvadratTall.[..i - 1]
+                let part2 = int64 kvadratTall.[i..]
+                if part2 <> 0L && part1 + part2 = inputNummer then
+                    yield inputNummer
+    }
 
-let splittStreng (input: string) index =
-    if index < 1 || index > input.Length - 1 then
-        None
-    else
-        let part1 = input.[0..index - 1]
-        let part2 = input.[index..]
-        part2
-            |> (fun part2 ->
-            if int64 part2 = 0L then 
-                None
-            else 
-                Some part2)
-            |> Option.map (fun part2 -> (part1, part2))
-
-let finnStrengKombinasjoner (input: string) =
-    let len = input.Length
-    [ 1 .. len ] |> List.choose (splittStreng input)
-
-let summerKombinasjoner ((p1, p2): string * string) =
-    let p1Num = int p1
-    let p2Num = int p2
-    p1Num + p2Num
-
-let sjekkKrampus (input: string) =
-    let inputNumber = int64 input
-    string (inputNumber * inputNumber)
-    |> finnStrengKombinasjoner
-    |> List.map summerKombinasjoner
-    |> List.exists (fun x -> int64 x = inputNumber)
-
-let sum =
-    linjer()
-    |> Array.map (fun s -> (int64 s, sjekkKrampus s))
-    |> Array.filter (fun (_, isKrampus) -> isKrampus)
-    |> Array.sumBy (fun (d, _) -> d)
+File.ReadAllLines(filSti)
+|> finnKrampusTall
+|> Seq.sum
 
 //fasit = 445372L
