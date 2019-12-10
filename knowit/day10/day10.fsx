@@ -1,22 +1,27 @@
-// Peter Meter registrerer alt han bruker nitidig. På badet bruker han alltid den samme tannkremen, den samme sjampoen og det samme toalettpapiret. Om disse vet vi følgende:
-//     Tannkremen kommer i tuber på 125 milliliter.
-//     Sjampoen kommer i flasker på 300 milliliter.
-//     Toalettpapiret kommer på ruller på 25 meter.
-// I denne loggfilen ser vi forbruket til Peter for 2018. Svaret vi skal frem til er produktet av følgende 5 tall:
-//     Antall hele tuber tannkrem brukt i 2018.
-//     Antall hele flasker sjampo brukt i 2018.
-//     Antall hele toalettruller brukt i 2018.
-//     Antall milliliter sjampo brukt på søndager.
-//     Antall meter toalettpapir brukt på onsdager.
-
+open System
 open System.IO
 let usCulture = System.Globalization.CultureInfo("en-US", true);
 let filSti = Path.Combine([| __SOURCE_DIRECTORY__; "logg.txt" |])
 
 type Dag = {
-  dag : System.DateTime
-  artikler : Map<string, int> 
+  Dato : System.DateTime
+  Ukedag : DayOfWeek
+  Artikler : Map<string, int> 
 }
+
+type Totaler = {
+  ToalettpapirM : int
+  SjampoMl : int
+  TannkremMl : int
+}
+
+let leggSammenTotaler (a: Totaler) (b: Totaler) =
+  {
+    ToalettpapirM = a.ToalettpapirM + b.ToalettpapirM
+    SjampoMl = a.SjampoMl + b.SjampoMl
+    TannkremMl = a.TannkremMl + b.TannkremMl
+  }
+
 
 let artiklerTilartikkelDict (input: string array) = 
   let reversed (art:string) = art.Replace("*", "").Trim().Split(' ') |> Array.rev
@@ -26,20 +31,62 @@ let artiklerTilartikkelDict (input: string array) =
 
 let dagTilDato (input:string) =
   try
-    Some (System.DateTime.ParseExact(input.Replace(":",""), "MMM dd", usCulture))
+    let strengDato = input.Replace(":","") + " 2018"
+    Some (System.DateTime.ParseExact(strengDato, "MMM dd yyyy", usCulture))
   with ex ->
-    printfn "Feil i datoparsing %A" ex
+    printfn "Feil i dato parsing %A" ex
     None
 
 let parseDag (dagInfo:string array) =
-  let dag = dagTilDato dagInfo.[0]
+  let dato = dagTilDato dagInfo.[0]
+  let ukedag = Option.map (fun (x:DateTime) -> x.DayOfWeek  ) dato
   let artikler = dagInfo |> Array.skip 1 |> artiklerTilartikkelDict
-  Option.map2 (fun d a -> {dag = d; artikler = a}) dag artikler
+  Option.map3 (fun d u a -> {Dato = d; Ukedag = u; Artikler = a}) dato ukedag artikler
 
-let grouped () =
+
+let lagStats (dagStats : Dag [] )= 
+  let antallDager = Array.length dagStats
+  let totaler =
+    dagStats
+    |> Array.map (fun dag -> {ToalettpapirM = dag.Artikler.["toalettpapir"]; SjampoMl = dag.Artikler.["sjampo"]; TannkremMl = dag.Artikler.["tannkrem"]      })
+    |> Array.reduce leggSammenTotaler
+  let totalerSondager =
+    dagStats
+    |> Array.filter (fun d -> d.Ukedag = DayOfWeek.Sunday)
+    |> Array.map (fun dag -> {ToalettpapirM = dag.Artikler.["toalettpapir"]; SjampoMl = dag.Artikler.["sjampo"]; TannkremMl = dag.Artikler.["tannkrem"]      })
+    |> Array.reduce leggSammenTotaler
+  let totalerOnsdager =
+    dagStats
+    |> Array.filter (fun d -> d.Ukedag = DayOfWeek.Wednesday)
+    |> Array.map (fun dag -> {ToalettpapirM = dag.Artikler.["toalettpapir"]; SjampoMl = dag.Artikler.["sjampo"]; TannkremMl = dag.Artikler.["tannkrem"]      })
+    |> Array.reduce leggSammenTotaler
+  
+  printfn "Antall dager: %d" antallDager
+  printfn "Totalt: %d meter toalettpapir" totaler.ToalettpapirM
+  printfn "Totalt: %d ml sjampo" totaler.SjampoMl
+  printfn "Totalt: %d ml tannkrem" totaler.TannkremMl
+  let heleTuberTannkrem2018 = totaler.TannkremMl / 125
+  let heleFlaskerSjampo2018 = totaler.SjampoMl / 300
+  let heleToalettruller2018 = totaler.ToalettpapirM / 25
+  printfn " "
+  printfn "Hele tuber tannkrem i 2018: %d" heleTuberTannkrem2018
+  printfn "Hele flasker sjampo i 2018: %d" heleFlaskerSjampo2018
+  printfn "Hele toalettruller i 2018: %d" heleToalettruller2018
+
+
+  let milliliterSjampoSondager = totalerSondager.SjampoMl
+  let meterToalettpapirOnsdager = totalerOnsdager.ToalettpapirM
+  printfn "Antall milliliter sjampo brukt paa sondager: %d" milliliterSjampoSondager
+  printfn "Antall meter toalettpapir brukt paa onsdager: %d" meterToalettpapirOnsdager
+
+  let totalProdukt = heleTuberTannkrem2018 * heleFlaskerSjampo2018 * heleToalettruller2018 * milliliterSjampoSondager * meterToalettpapirOnsdager
+  printfn "Totalprodukt: %d" totalProdukt
+  totalProdukt
+
+let finnDagensTall () =
   File.ReadAllLines(filSti)
   |> Array.chunkBySize 4
-  |> Array.map parseDag
-  |> Array.filter (Option.isNone)
+  |> Array.choose parseDag
+  |> lagStats
 
-grouped ()
+finnDagensTall ()
