@@ -1,5 +1,4 @@
 open System.IO
-open System
 
 let filStiProd = Path.Combine([| __SOURCE_DIRECTORY__; "fjord.txt" |])
 let filStiTest = Path.Combine([| __SOURCE_DIRECTORY__; "test.txt" |])
@@ -9,12 +8,11 @@ let lesFil filSti = File.ReadAllLines(filSti) //    |> Array.rev
 type Tilstand =
     { X: int
       Y: int
+      Lengder: int
       YVelocity: int }
-
 
 let tellAntallKryss filSti =
     let fjord = lesFil filSti //  |> Array.rev
-
 
     let (startX, startY) =
         let c = "B"
@@ -23,60 +21,47 @@ let tellAntallKryss filSti =
         |> Option.map (fun y -> (fjord.[y].IndexOf(c), y))
         |> Option.defaultValue (0, 0)
 
-    printfn "StartY: %d" startY
-
     let fjordSlutt = fjord.[0].Length
 
     let startTilstand =
         { X = startX
           Y = startY
+          Lengder = 1
           YVelocity = -1 }
 
-    let skalKrysse xPos yPos yVel =
-        let sjekkY = yPos + (yVel * 3)
-        // printfn "SjekkY: %d" sjekkY
-        // printfn "SjekkX: %d" xPos
-        let sjekkStreng: string = fjord.[sjekkY]
-        // printfn "Char: %c" sjekkStreng.[xPos]
-        // printfn "Char er lik: %b" (sjekkStreng.[xPos] = '#')
-        sjekkStreng.[xPos] = '#'
+    let skalKrysse xPos yPos yVel = fjord.[yPos + (yVel * 3)].[xPos] = '#'
 
-    let rute =
-        startTilstand
-        |> Seq.unfold (fun b ->
-            // printfn "Input: %A" b
-            if b.X >= fjordSlutt then
-                None
-            else if not (skalKrysse b.X b.Y b.YVelocity) then
-                let nyB =
-                    { b with
-                          X = b.X + 1
-                          Y = b.Y + b.YVelocity }
-                // printfn "Ikke kryss: %A" nyB
-                Some((0, nyB.X, nyB.Y), nyB)
-            else
-                let nyB =
-                    { b with
-                          X = b.X + 1
-                          YVelocity = b.YVelocity * -1 }
-                // printfn "Krysser: %A" nyB
-                Some((1, nyB.X, nyB.Y), nyB))
+    startTilstand
+    |> Seq.unfold (fun b ->
+        if b.X >= fjordSlutt - 1 then
+            None
+        else if not (skalKrysse b.X b.Y b.YVelocity) then
+            let ny =
+                { b with
+                      X = b.X + 1
+                      Y = b.Y + b.YVelocity }
+            Some((0, ny.Lengder, ny.X, ny.Y), ny)
+        else
+            let ny =
+                { b with
+                      X = b.X + 1
+                      Lengder = b.Lengder + 1
+                      YVelocity = b.YVelocity * -1 }
+            Some((1, ny.Lengder, ny.X, ny.Y), ny))
 
-    rute
+// tellAntallKryss filStiTest |> Seq.toArray
 
-
-// tellAntallKryss filStiTest |> printfn "%A"
-tellAntallKryss filStiTest |> Seq.toArray
-
-
-
+// Antall testkryss
 tellAntallKryss filStiTest
-|> Seq.filter (fun (k, _, _) -> k = 1)
+|> Seq.filter (fun (k, _, _, _) -> k = 1)
 |> Seq.length
 
+// Antall kryss
 tellAntallKryss filStiProd
-|> Seq.filter (fun (k, _, _) -> k = 1)
+|> Seq.filter (fun (k, _, _, _) -> k = 1)
 |> Seq.length
-h
-h
-h
+
+// Antall lengder
+tellAntallKryss filStiProd
+|> Seq.last
+|> fun (_, lengder, _, _) -> lengder
