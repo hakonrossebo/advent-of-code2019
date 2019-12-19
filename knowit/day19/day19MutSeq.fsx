@@ -1,12 +1,14 @@
-let reverser (n: uint64) =
-  let mutable (n: uint64) = n
-  let mutable (reversert: uint64) = 0UL
+open Microsoft.FSharp.Core.Operators.Checked
+
+let reverser n =
+  let mutable n = n
+  let mutable reversert = 0UL
   while n <> 0UL do
     reversert <- (reversert * 10UL) + (n % 10UL)
     n <- n / 10UL
   reversert
 
-let erPalindrom (n:uint64) = 
+let erPalindrom n = 
   n = reverser n
 
 let skjultePalindromer range =
